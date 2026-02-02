@@ -18,7 +18,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/server /server
 
 # Copy static files
-COPY k8s-homepage.html /app/index.html
+COPY static/ /app/
 
 # Run as non-root user (UID 65534 = nobody)
 USER 65534:65534
