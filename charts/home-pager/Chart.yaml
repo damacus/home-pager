@@ -1,0 +1,20 @@
+apiVersion: v2
+name: home-pager
+description: A Kubernetes application dashboard that displays apps from Ingress annotations
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - homepage
+  - dashboard
+  - kubernetes
+  - ingress
+maintainers:
+  - name: damacus
+home: https://github.com/damacus/home-pager
+sources:
+  - https://github.com/damacus/home-pager
+dependencies:
+  - name: app-template
+    version: 4.5.0
+    repository: https://bjw-s-labs.github.io/helm-charts
