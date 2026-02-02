@@ -20,71 +20,11 @@
       </header>
 
       <main>
-        <section class="controls" aria-labelledby="controls-heading">
-          <h2 id="controls-heading" class="visually-hidden">Configuration</h2>
-
-          <div class="form-group">
-            <label for="yaml-input" class="form-label">
-              Paste Kubernetes Resources (YAML):
-            </label>
-            <textarea
-              id="yaml-input"
-              class="form-textarea"
-              placeholder="Paste your Kubernetes Ingress/Service YAML here...
-
-Example:
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: my-app
-  namespace: production
-  annotations:
-    homepage.link/enabled: 'true'
-    homepage.link/name: 'My Application'
-    homepage.link/icon: '🎯'
-spec:
-  rules:
-  - host: app.example.com"
-              aria-describedby="yaml-help"
-            ></textarea>
-            <p id="yaml-help" class="visually-hidden">
-              Enter Kubernetes Ingress YAML with homepage.link annotations to display applications
-            </p>
-          </div>
-
-          <fieldset class="form-group">
-            <legend class="form-label">Network Mode:</legend>
-            <div class="radio-group" role="radiogroup">
-              <label class="radio-option">
-                <input
-                  type="radio"
-                  name="network"
-                  value="internal"
-                  checked
-                  class="radio-option__input"
-                />
-                <span class="radio-option__label">Internal Network</span>
-              </label>
-              <label class="radio-option">
-                <input
-                  type="radio"
-                  name="network"
-                  value="external"
-                  class="radio-option__input"
-                />
-                <span class="radio-option__label">External Network</span>
-              </label>
-            </div>
-          </fieldset>
-
-          <div class="form-group">
-            <button type="button" id="load-button" class="btn">
-              Load Applications
-            </button>
+        <section id="apps-container" aria-live="polite" aria-label="Applications">
+          <div class="loading-state" role="status">
+            <p>Loading applications...</p>
           </div>
         </section>
-
-        <section id="apps-container" aria-live="polite" aria-label="Applications"></section>
       </main>
     </div>
 

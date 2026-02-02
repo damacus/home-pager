@@ -5,8 +5,9 @@ WORKDIR /build
 
 COPY server/main.go .
 
-# Build static binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o server main.go
+# Build static binary for target platform
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o server main.go
 
 # Final stage - scratch image (smallest possible)
 FROM scratch

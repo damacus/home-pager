@@ -295,6 +295,35 @@ body {
   color: var(--color-text-light);
 }
 
+.loading-state {
+  text-align: center;
+  padding: 60px var(--spacing-lg);
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-muted);
+}
+
+.loading-state p {
+  font-size: 1.2rem;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-state {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -323,6 +352,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
