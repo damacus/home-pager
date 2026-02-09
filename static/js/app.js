@@ -9,6 +9,7 @@ const HomePager = (() => {
 
   const elements = {
     appsContainer: null,
+    statusAnnouncer: null,
   };
 
   function init() {
@@ -19,6 +20,7 @@ const HomePager = (() => {
 
   function cacheElements() {
     elements.appsContainer = document.getElementById("apps-container");
+    elements.statusAnnouncer = document.getElementById("status-announcer");
   }
 
   function startAutoRefresh() {
@@ -29,6 +31,7 @@ const HomePager = (() => {
   }
 
   async function loadApplications() {
+    setBusyState(true);
     try {
       const response = await fetch(API_ENDPOINT);
 
@@ -41,13 +44,18 @@ const HomePager = (() => {
 
       if (apps.length === 0) {
         renderEmptyState("No applications found with homepage annotations");
+        announceStatus("No applications found");
         return;
       }
 
       renderApplications(apps);
+      announceStatus(`${apps.length} application${apps.length === 1 ? "" : "s"} loaded`);
     } catch (error) {
       console.error("Failed to load applications:", error);
       renderEmptyState(`Failed to load applications: ${error.message}`);
+      announceStatus("Failed to load applications");
+    } finally {
+      setBusyState(false);
     }
   }
 
@@ -109,9 +117,9 @@ const HomePager = (() => {
     if (!elements.appsContainer) return;
 
     const fragment = document.createDocumentFragment();
-    const grid = document.createElement("div");
+    const grid = document.createElement("ul");
     grid.className = "apps-grid";
-    grid.setAttribute("role", "list");
+    grid.setAttribute("aria-label", "Application links");
 
     for (const app of apps) {
       grid.appendChild(createAppCard(app));
@@ -123,25 +131,29 @@ const HomePager = (() => {
   }
 
   function createAppCard(app) {
+    const listItem = document.createElement("li");
+    listItem.className = "apps-grid__item";
+
     const card = document.createElement("a");
     card.href = app.url;
     card.className = "app-card";
     card.target = "_blank";
     card.rel = "noopener noreferrer";
-    card.setAttribute("role", "listitem");
 
     card.innerHTML = `
       <div class="app-card__icon" aria-hidden="true">${escapeHtml(app.icon)}</div>
       <h2 class="app-card__name">${escapeHtml(app.name)}</h2>
-      <p class="app-card__namespace">namespace: ${escapeHtml(app.namespace)}</p>
+      <p class="app-card__namespace">Namespace: ${escapeHtml(app.namespace)}</p>
       ${app.description ? `<p class="app-card__description">${escapeHtml(app.description)}</p>` : ""}
       <p class="app-card__url">${escapeHtml(app.url)}</p>
       <div class="app-card__meta">
         <p class="app-card__resource">Resource: ${escapeHtml(app.resourceName)}</p>
       </div>
+      <span class="visually-hidden">Opens in a new tab</span>
     `;
 
-    return card;
+    listItem.appendChild(card);
+    return listItem;
   }
 
   function renderEmptyState(message) {
@@ -159,6 +171,21 @@ const HomePager = (() => {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  function announceStatus(message) {
+    if (!elements.statusAnnouncer) return;
+    elements.statusAnnouncer.textContent = "";
+    requestAnimationFrame(() => {
+      if (elements.statusAnnouncer) {
+        elements.statusAnnouncer.textContent = message;
+      }
+    });
+  }
+
+  function setBusyState(isBusy) {
+    if (!elements.appsContainer) return;
+    elements.appsContainer.setAttribute("aria-busy", isBusy ? "true" : "false");
   }
 
   return { init };

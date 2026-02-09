@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <div id="status-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
     <div class="container">
       <header class="header">
         <h1 class="header__title">
@@ -19,8 +21,8 @@
         <p class="header__subtitle">Your Kubernetes applications at a glance</p>
       </header>
 
-      <main>
-        <section id="apps-container" aria-live="polite" aria-label="Applications">
+      <main id="main-content" tabindex="-1">
+        <section id="apps-container" aria-label="Applications">
           <div class="loading-state" role="status">
             <p>Loading applications...</p>
           </div>
