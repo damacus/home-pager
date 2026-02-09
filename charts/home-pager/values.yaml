@@ -1,10 +1,6 @@
-rbac:
-  create: true
-
 app-template:
   defaultPodOptions:
     automountServiceAccountToken: true
-    serviceAccountName: "{{ .Release.Name }}"
     securityContext:
       runAsUser: 65534
       runAsGroup: 65534
@@ -16,16 +12,19 @@ app-template:
     main:
       strategy: RollingUpdate
       replicas: 1
+      serviceAccount:
+        identifier: main
 
       containers:
         main:
           image:
             repository: ghcr.io/damacus/home-pager
-            tag: latest
+            tag: "0.1.0"
             pullPolicy: IfNotPresent
 
           env:
             PORT: "8080"
+            KUBERNETES_TIMEOUT: "10s"
 
           securityContext:
             allowPrivilegeEscalation: false
@@ -47,7 +46,7 @@ app-template:
               custom: true
               spec:
                 httpGet:
-                  path: /
+                  path: /healthz
                   port: 8080
                 initialDelaySeconds: 5
                 periodSeconds: 10
@@ -56,7 +55,7 @@ app-template:
               custom: true
               spec:
                 httpGet:
-                  path: /
+                  path: /readyz
                   port: 8080
                 initialDelaySeconds: 5
                 periodSeconds: 10
@@ -80,3 +79,24 @@ app-template:
               service:
                 identifier: main
                 port: http
+
+  serviceAccount:
+    main: {}
+
+  rbac:
+    roles:
+      ingress-reader:
+        type: ClusterRole
+        suffix: "{{ .Release.Namespace }}"
+        rules:
+          - apiGroups: ["networking.k8s.io"]
+            resources: ["ingresses"]
+            verbs: ["get", "list", "watch"]
+    bindings:
+      ingress-reader:
+        type: ClusterRoleBinding
+        suffix: "{{ .Release.Namespace }}"
+        roleRef:
+          identifier: ingress-reader
+        subjects:
+          - identifier: main

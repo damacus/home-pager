@@ -1,13 +1,14 @@
 # Build stage - compile static file server
-FROM golang:1.25-alpine AS builder
+FROM golang:1.25.7-alpine AS builder
 
 WORKDIR /build
 
+COPY server/go.mod .
 COPY server/main.go .
 
 # Build static binary for target platform
 ARG TARGETARCH
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o server main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath -ldflags="-s -w" -o server main.go
 
 # Final stage - scratch image (smallest possible)
 FROM scratch

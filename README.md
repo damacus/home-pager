@@ -8,6 +8,8 @@ A minimal Kubernetes application dashboard that displays apps from Ingress annot
 - Support for internal/external network modes
 - Annotations-based configuration (`homepage.link/*`)
 - Minimal, secure container (~5MB scratch-based image)
+- Health and readiness endpoints (`/healthz`, `/readyz`)
+- Prometheus-style metrics endpoint (`/metrics`)
 
 ## Container Image
 
@@ -45,7 +47,7 @@ Key values:
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `app-template.controllers.main.containers.main.image.repository` | Image repository | `ghcr.io/damacus/home-pager` |
-| `app-template.controllers.main.containers.main.image.tag` | Image tag | `latest` |
+| `app-template.controllers.main.containers.main.image.tag` | Image tag | `0.1.0` |
 | `app-template.ingress.main.enabled` | Enable ingress | `false` |
 | `app-template.ingress.main.className` | Ingress class | `""` |
 | `app-template.ingress.main.hosts` | Ingress hosts | `[]` |
@@ -70,11 +72,28 @@ metadata:
 
 ## Development
 
+### Environment
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | HTTP listen port | `8080` |
+| `KUBERNETES_TIMEOUT` | Kubernetes API timeout (e.g. `10s` or seconds) | `10s` |
+
 ### Build locally
 
 ```bash
 docker build -t home-pager:local .
 docker run -p 8080:8080 home-pager:local
+```
+
+### Local Go commands
+
+```bash
+mise trust
+mise install
+cd server
+mise exec -- go test ./...
+mise exec -- go vet ./...
 ```
 
 ### Helm chart development
