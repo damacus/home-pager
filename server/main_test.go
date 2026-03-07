@@ -69,8 +69,11 @@ func TestHealthAndReady(t *testing.T) {
 		t.Fatalf("expected status=ready from /readyz, got %q", ready["status"])
 	}
 
-	t.Setenv("KUBERNETES_SERVICE_HOST", "kubernetes.default.svc")
-	t.Setenv("KUBERNETES_SERVICE_PORT", "443")
+	kubernetesServiceHost = "kubernetes.default.svc"
+	defer func() { kubernetesServiceHost = "" }()
+	kubernetesServicePort = "443"
+	defer func() { kubernetesServicePort = "" }()
+
 	httpClient = nil
 	req = httptest.NewRequest(http.MethodGet, "/readyz", nil)
 	rr = httptest.NewRecorder()
@@ -90,8 +93,9 @@ func TestHandleIngressesMethodAndFallback(t *testing.T) {
 		t.Fatalf("expected 405 for non-GET request, got %d", rr.Code)
 	}
 
-	t.Setenv("KUBERNETES_SERVICE_HOST", "")
-	t.Setenv("KUBERNETES_SERVICE_PORT", "")
+	kubernetesServiceHost = ""
+	kubernetesServicePort = ""
+
 	req = httptest.NewRequest(http.MethodGet, "/api/ingresses", nil)
 	rr = httptest.NewRecorder()
 	h.ServeHTTP(rr, req)

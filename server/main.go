@@ -18,7 +18,11 @@ import (
 	"time"
 )
 
-var httpClient *http.Client
+var (
+	httpClient            *http.Client
+	kubernetesServiceHost string
+	kubernetesServicePort string
+)
 
 const (
 	defaultPort           = "8080"
@@ -84,6 +88,9 @@ func main() {
 }
 
 func initKubernetesClient(timeout time.Duration) {
+	kubernetesServiceHost = strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_HOST"))
+	kubernetesServicePort = strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_PORT"))
+
 	caCert, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
 	if err != nil {
 		log.Printf("Warning: Could not read CA cert: %v (running outside cluster?)", err)
@@ -128,10 +135,7 @@ func handleIngresses(timeout time.Duration) http.HandlerFunc {
 }
 
 func fetchIngresses(ctx context.Context) (map[string]interface{}, error) {
-	apiServer := os.Getenv("KUBERNETES_SERVICE_HOST")
-	apiPort := os.Getenv("KUBERNETES_SERVICE_PORT")
-
-	if apiServer == "" || apiPort == "" {
+	if kubernetesServiceHost == "" || kubernetesServicePort == "" {
 		return map[string]interface{}{"items": []interface{}{}}, nil
 	}
 
@@ -141,7 +145,7 @@ func fetchIngresses(ctx context.Context) (map[string]interface{}, error) {
 	}
 	token := strings.TrimSpace(string(tokenBytes))
 
-	url := "https://" + apiServer + ":" + apiPort + "/apis/networking.k8s.io/v1/ingresses"
+	url := "https://" + kubernetesServiceHost + ":" + kubernetesServicePort + "/apis/networking.k8s.io/v1/ingresses"
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -248,11 +252,8 @@ func getEnvDuration(name string, fallback time.Duration) time.Duration {
 }
 
 func isReady() bool {
-	apiServer := strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_HOST"))
-	apiPort := strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_PORT"))
-
 	// Outside Kubernetes, always report ready for local/dev usage.
-	if apiServer == "" || apiPort == "" {
+	if kubernetesServiceHost == "" || kubernetesServicePort == "" {
 		return true
 	}
 
