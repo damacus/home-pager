@@ -26,6 +26,11 @@ const (
 	maxIngressesBodyBytes = 4 << 20
 )
 
+var (
+	tokenFilePath   = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	kubernetesToken string
+)
+
 var startTime = time.Now()
 var totalRequests uint64
 
@@ -84,6 +89,13 @@ func main() {
 }
 
 func initKubernetesClient(timeout time.Duration) {
+	tokenBytes, err := os.ReadFile(tokenFilePath)
+	if err == nil {
+		kubernetesToken = strings.TrimSpace(string(tokenBytes))
+	} else {
+		log.Printf("Warning: Could not read service account token: %v", err)
+	}
+
 	caCert, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
 	if err != nil {
 		log.Printf("Warning: Could not read CA cert: %v (running outside cluster?)", err)
@@ -135,11 +147,9 @@ func fetchIngresses(ctx context.Context) (map[string]interface{}, error) {
 		return map[string]interface{}{"items": []interface{}{}}, nil
 	}
 
-	tokenBytes, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
-	if err != nil {
-		return nil, err
+	if kubernetesToken == "" {
+		return nil, errors.New("kubernetes service account token is not set")
 	}
-	token := strings.TrimSpace(string(tokenBytes))
 
 	url := "https://" + apiServer + ":" + apiPort + "/apis/networking.k8s.io/v1/ingresses"
 
@@ -147,7 +157,7 @@ func fetchIngresses(ctx context.Context) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Authorization", "Bearer "+kubernetesToken)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -260,10 +270,5 @@ func isReady() bool {
 		return false
 	}
 
-	tokenBytes, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
-	if err != nil {
-		return false
-	}
-
-	return strings.TrimSpace(string(tokenBytes)) != ""
+	return kubernetesToken != ""
 }
