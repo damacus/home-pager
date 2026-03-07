@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -106,5 +109,52 @@ func TestHandleIngressesMethodAndFallback(t *testing.T) {
 	}
 	if len(items) != 0 {
 		t.Fatalf("expected empty items when not running in cluster, got %d items", len(items))
+	}
+}
+
+func TestWithRequestMetrics(t *testing.T) {
+	initialRequests := atomic.LoadUint64(&totalRequests)
+
+	handler := withRequestMetrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", rr.Code)
+	}
+
+	finalRequests := atomic.LoadUint64(&totalRequests)
+	if finalRequests != initialRequests+1 {
+		t.Errorf("expected totalRequests to be %d, got %d", initialRequests+1, finalRequests)
+	}
+}
+
+func TestHandleMetrics(t *testing.T) {
+	// Ensure totalRequests is at least 1 for the test
+	atomic.AddUint64(&totalRequests, 1)
+	requests := atomic.LoadUint64(&totalRequests)
+
+	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	rr := httptest.NewRecorder()
+
+	handleMetrics(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", rr.Code)
+	}
+
+	body := rr.Body.String()
+	expectedMetric := "home_pager_http_requests_total " + strconv.FormatUint(requests, 10)
+	if !strings.Contains(body, expectedMetric) {
+		t.Errorf("expected metric %q in output, got %q", expectedMetric, body)
+	}
+
+	if !strings.Contains(body, "home_pager_uptime_seconds") {
+		t.Error("expected uptime metric in output")
 	}
 }
