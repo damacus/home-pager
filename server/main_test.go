@@ -108,3 +108,25 @@ func TestHandleIngressesMethodAndFallback(t *testing.T) {
 		t.Fatalf("expected empty items when not running in cluster, got %d items", len(items))
 	}
 }
+
+func TestInitKubernetesClientFallback(t *testing.T) {
+	// Save original client and restore after test
+	originalClient := httpClient
+	defer func() { httpClient = originalClient }()
+
+	// Test fallback path
+	timeout := 7 * time.Second
+	initKubernetesClient(timeout)
+
+	if httpClient == nil {
+		t.Fatal("expected httpClient to be initialized, got nil")
+	}
+
+	if httpClient.Timeout != timeout {
+		t.Fatalf("expected timeout to be %v, got %v", timeout, httpClient.Timeout)
+	}
+
+	if httpClient.Transport != nil {
+		t.Fatalf("expected Transport to be nil in fallback path, got %v", httpClient.Transport)
+	}
+}
