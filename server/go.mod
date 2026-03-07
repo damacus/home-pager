@@ -1,3 +1,3 @@
 module github.com/damacus/home-pager
 
-go 1.25.7
+go 1.24.3
