@@ -127,9 +127,15 @@ func handleIngresses(timeout time.Duration) http.HandlerFunc {
 	}
 }
 
+func getKubernetesEndpoint() (string, string) {
+	apiServer := strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_HOST"))
+	apiPort := strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_PORT"))
+
+	return apiServer, apiPort
+}
+
 func fetchIngresses(ctx context.Context) (map[string]interface{}, error) {
-	apiServer := os.Getenv("KUBERNETES_SERVICE_HOST")
-	apiPort := os.Getenv("KUBERNETES_SERVICE_PORT")
+	apiServer, apiPort := getKubernetesEndpoint()
 
 	if apiServer == "" || apiPort == "" {
 		return map[string]interface{}{"items": []interface{}{}}, nil
@@ -248,8 +254,7 @@ func getEnvDuration(name string, fallback time.Duration) time.Duration {
 }
 
 func isReady() bool {
-	apiServer := strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_HOST"))
-	apiPort := strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_PORT"))
+	apiServer, apiPort := getKubernetesEndpoint()
 
 	// Outside Kubernetes, always report ready for local/dev usage.
 	if apiServer == "" || apiPort == "" {
