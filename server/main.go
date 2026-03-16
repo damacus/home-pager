@@ -117,7 +117,7 @@ func handleIngresses(timeout time.Duration) http.HandlerFunc {
 		ingresses, err := fetchIngresses(ctx)
 		if err != nil {
 			log.Printf("Error fetching ingresses: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
