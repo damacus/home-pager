@@ -22,6 +22,8 @@ var (
 	httpClient            *http.Client
 	kubernetesServiceHost string
 	kubernetesServicePort string
+	tokenPath             = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	caCertPath            = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 )
 
 const (
@@ -91,7 +93,7 @@ func initKubernetesClient(timeout time.Duration) {
 	kubernetesServiceHost = strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_HOST"))
 	kubernetesServicePort = strings.TrimSpace(os.Getenv("KUBERNETES_SERVICE_PORT"))
 
-	caCert, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
+	caCert, err := os.ReadFile(caCertPath)
 	if err != nil {
 		log.Printf("Warning: Could not read CA cert: %v (running outside cluster?)", err)
 		httpClient = &http.Client{Timeout: timeout}
@@ -139,7 +141,7 @@ func fetchIngresses(ctx context.Context) (map[string]interface{}, error) {
 		return map[string]interface{}{"items": []interface{}{}}, nil
 	}
 
-	tokenBytes, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	tokenBytes, err := os.ReadFile(tokenPath)
 	if err != nil {
 		return nil, err
 	}
@@ -257,14 +259,6 @@ func isReady() bool {
 		return true
 	}
 
-	if httpClient == nil {
-		return false
-	}
-
-	tokenBytes, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
-	if err != nil {
-		return false
-	}
-
-	return strings.TrimSpace(string(tokenBytes)) != ""
+	// In-cluster, we are ready if the Kubernetes client was successfully initialized.
+	return httpClient != nil
 }

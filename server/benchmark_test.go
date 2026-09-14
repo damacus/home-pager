@@ -16,7 +16,8 @@ func BenchmarkFetchIngresses(b *testing.B) {
 	}
 }
 
-func BenchmarkIsReady(b *testing.B) {
+func BenchmarkIsReady_NoIO(b *testing.B) {
+	// Outside Kubernetes case
 	kubernetesServiceHost = ""
 	kubernetesServicePort = ""
 
